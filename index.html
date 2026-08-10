@@ -400,7 +400,7 @@ function sembunyikanPesan(){
 }
 async function bagikanWeb(){
   const link=window.location.href;
-  const teks="hai bro coba lah website ini di sini kita bisa mengulang berapapun kata yang kita inginkan👇";
+  const teks="hai bro coba lah website ini di sini kita bisa mengulang berapapun kata yang kita inginkan";
   try{
     if(navigator.share) await navigator.share({title:"Pengulang Teks",text:teks,url:link});
     else{await navigator.clipboard.writeText(link);alert("✅ Link disalin! Kirim ke teman!");}
