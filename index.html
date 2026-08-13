@@ -400,7 +400,7 @@ function sembunyikanPesan(){
 }
 async function bagikanWeb(){
   const link=window.location.href;
-  const teks="Coba alat Pengulang Teks ini! Gampang & cepat dipakai! 👇";
+  const teks="hai bro coba website ini kita iseng-iseng ke teman lain kita spam pasti seru kan";
   try{
     if(navigator.share) await navigator.share({title:"Pengulang Teks",text:teks,url:link});
     else{await navigator.clipboard.writeText(link);alert("✅ Link disalin! Kirim ke teman!");}
