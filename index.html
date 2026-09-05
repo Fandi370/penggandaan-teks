@@ -277,9 +277,9 @@
             <label><input type="radio" name="mode" value="baris" checked><span>📏 Tiap Baris</span></label>
             <label><input type="radio" name="mode" value="jejer"><span>🔗 Berjejer</span></label>
         </div>
-        <button class="tombol-buat" onclick="buatUlang()"><span class="ikon-pengulang">🔁</span> Buat Teks</button>
+<button class="tombol-buat" onclick="buatUlang()"><span class="ikon-pengulang">🔁</span> Buat Teks</button>
         <textarea id="hasil" readonly placeholder="Hasil teks muncul di sini..."></textarea>
-        <div class="info">Jumlah: <span id="total">0</span> kali | Karakter: <span id="totalKarakter">0</span></div>
+<div class="info" style="font-size:14px; color:#888; font-weight:normal;">👑 Pengulangan kamu: <span id="statsKamu">0</span> kali</div>
         <button class="tombol-salin" onclick="salinHasil()"><span>📋</span> Salin Hasil</button>
         
         <!-- === GANTI LINK DI BAWAH INI DENGAN LINK PROFIL SAWERIA KAMU === -->
@@ -361,6 +361,7 @@ function buatUlang(){
     document.getElementById('hasil').value=hasil.trim();
     document.getElementById('total').textContent=kali;
     document.getElementById('totalKarakter').textContent=hasil.length;
+    updateStats();
 }
 async function salinHasil(){
     let teks=document.getElementById('hasil').value;
@@ -406,6 +407,25 @@ async function bagikanWeb(){
     else{await navigator.clipboard.writeText(link);alert("✅ Link disalin! Kirim ke teman!");}
   }catch(e){alert("Salin link ini: "+link)}
 }
+// ===== FITUR TRACKING PENGULANGAN =====
+function loadStats() {
+    let stats = localStorage.getItem('pengulangStats');
+    if (!stats) {
+        stats = { total: 0 };
+        localStorage.setItem('pengulangStats', JSON.stringify(stats));
+    }
+    return JSON.parse(stats);
+}
+
+function updateStats() {
+    let stats = loadStats();
+    stats.total += 1;
+    localStorage.setItem('pengulangStats', JSON.stringify(stats));
+    document.getElementById('statsKamu').textContent = stats.total;
+}
+
+// Tampilkan angka tersimpan saat halaman dibuka
+document.getElementById('statsKamu').textContent = loadStats().total;
 </script>
 <div class="popup-overlay" id="popupOverlay">
     <div class="popup-kotak">✅ Berhasil Disalin!</div>
