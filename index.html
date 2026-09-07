@@ -230,7 +230,7 @@
             font-weight: 500;
             transition: color 0.3s ease;
         }
-                .popup-overlay {
+        .popup-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.4); display: flex; align-items: center;
             justify-content: center; z-index: 1000; opacity: 0; pointer-events: none;
@@ -245,6 +245,24 @@
         }
         .popup-overlay.tampil .popup-kotak { transform: scale(1); }
 
+        .stats-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+        .stats-item {
+            background: rgba(255,255,255,0.7);
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #444;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .stats-item strong {
+            color: #0066cc;
+        }
     </style>
 </head>
 <body>
@@ -277,17 +295,24 @@
             <label><input type="radio" name="mode" value="baris" checked><span>📏 Tiap Baris</span></label>
             <label><input type="radio" name="mode" value="jejer"><span>🔗 Berjejer</span></label>
         </div>
-<button class="tombol-buat" onclick="buatUlang()"><span class="ikon-pengulang">🔁</span> Buat Teks</button>
+        <button class="tombol-buat" onclick="buatUlang()"><span class="ikon-pengulang">🔁</span> Buat Teks</button>
         <textarea id="hasil" readonly placeholder="Hasil teks muncul di sini..."></textarea>
-<div class="info" style="font-size:14px; color:#888; font-weight:normal;">👑 Pengulangan kamu: <span id="statsKamu">0</span> kali</div>
-        <button class="tombol-salin" onclick="salinHasil()"><span>📋</span> Salin Hasil</button>
         
-        <!-- === GANTI LINK DI BAWAH INI DENGAN LINK PROFIL SAWERIA KAMU === -->
+        <div class="stats-container">
+            <div class="stats-item">📊 Jumlah: <strong id="total">0</strong> kali</div>
+            <div class="stats-item">📝 Karakter: <strong id="totalKarakter">0</strong></div>
+            <div class="stats-item">👑 Total Pengulangan: <strong id="statsKamu">0</strong> kali</div>
+        </div>
+
+        <button class="tombol-salin" onclick="salinHasil()"><span>📋</span> Salin Hasil</button>
         <button class="tombol-donasi" onclick="window.open('https://saweria.co/fandi247', '_blank')"><span>💸</span> Dukung Saya / Donasi</button>
     </div>
 </div>
 
 <script>
+// ============================================================
+// PILIH WARNA
+// ============================================================
 let warnaTerpilih = null;
 const semuaWarna = document.querySelectorAll('.warna');
 const tombolLanjut = document.getElementById('tombolLanjut');
@@ -296,7 +321,6 @@ const isiUtama = document.getElementById('isiUtama');
 const tombolBuat = document.querySelector('.tombol-buat');
 const tombolSalin = document.querySelector('.tombol-salin');
 const judul = document.querySelector('h2');
-const info = document.querySelector('.info');
 const kotakInput = document.querySelectorAll('input, textarea');
 const modeLabel = document.querySelectorAll('.pilihan-mode label');
 
@@ -323,7 +347,6 @@ tombolLanjut.addEventListener('click', () => {
     tombolBuat.style.boxShadow = `0 0 20px ${cahaya}, 0 0 30px ${cahaya}`;
     tombolSalin.style.boxShadow = `0 0 20px ${cahaya}, 0 0 30px ${cahaya}`;
     judul.style.color = warnaTeks;
-    info.style.color = warnaTeks;
     kotakInput.forEach(i => i.style.borderColor = warnaTeks);
     modeLabel.forEach(lbl => {
         lbl.style.color = warnaTeks;
@@ -351,63 +374,34 @@ tombolLanjut.addEventListener('click', () => {
     });
 });
 
+// ============================================================
+// FUNGSI PENGULANG TEKS
+// ============================================================
 function buatUlang(){
-    let kata=document.getElementById('kataDasar').value;
-    let kali=parseInt(document.getElementById('jumlahUlang').value)||1;
-    let mode=document.querySelector('input[name=mode]:checked').value;
-    if(!kata)return alert('Tulis dulu teksnya!');
-    let hasil='', pemisah=mode==='baris'?'\n':'';
-    for(let i=0;i<kali;i++)hasil+=kata+pemisah;
-    document.getElementById('hasil').value=hasil.trim();
-    document.getElementById('total').textContent=kali;
-    document.getElementById('totalKarakter').textContent=hasil.length;
-    updateStats();
-}
-async function salinHasil(){
-    let teks=document.getElementById('hasil').value;
-    if(!teks)return alert('Belum ada teks!');
-    let ok=!1;
-    try{await navigator.clipboard.writeText(teks);ok=!0}
-    catch{let a=document.getElementById('hasil');a.select();ok=document.execCommand('copy')}
+    let kata = document.getElementById('kataDasar').value;
+    let kali = parseInt(document.getElementById('jumlahUlang').value) || 1;
+    let mode = document.querySelector('input[name=mode]:checked').value;
     
-    if(ok){
-        const popup=document.getElementById('popupOverlay');
-        popup.classList.add('tampil');
-        setTimeout(()=>popup.classList.remove('tampil'),3000);
-    }else{
-        alert('Gagal salin, coba salin manual');
+    if(!kata) return alert('Tulis dulu teksnya!');
+    
+    let hasil = '';
+    let pemisah = mode === 'baris' ? '\n' : ' ';
+    
+    for(let i = 0; i < kali; i++) {
+        hasil += kata + pemisah;
     }
+    
+    document.getElementById('hasil').value = hasil.trim();
+    document.getElementById('total').textContent = kali;
+    document.getElementById('totalKarakter').textContent = hasil.length;
+    
+    // ===== TAMBAH STATS =====
+    tambahStats();
 }
 
-</script>
-<!-- TOMBOL BAGIKAN: KANAN BAWAH, PESAN DI ATAS -->
-<div style="position:fixed; bottom:20px; right:20px; z-index:999;">
-  <!-- Pesan ajakan: DI ATAS tombol, bisa ditutup -->
-  <div id="pesanAjak" style="margin-bottom:8px; background:#e3f2fd; border-radius:10px; padding:6px 10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); display:flex; align-items:center; gap:6px; width:max-content; margin-left:auto;">
-    <button onclick="sembunyikanPesan()" style="background:none; border:none; font-size:14px; cursor:pointer; color:#666; line-height:1;">✕</button>
-    <span style="font-size:13px; color:#1976d2;">Bagikan ke teman!</span>
-  </div>
-
-  <!-- Tombol bulat hijau kecil -->
-  <button onclick="bagikanWeb()" style="width:55px; height:55px; border-radius:50%; background:linear-gradient(135deg, #4CAF50, #2E7D32); color:white; border:none; font-size:22px; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center; margin-left:auto;">
-    ↗
-  </button>
-</div>
-
-<script>
-function sembunyikanPesan(){
-  document.getElementById('pesanAjak').style.opacity='0';
-  setTimeout(()=>document.getElementById('pesanAjak').style.display='none',300);
-}
-async function bagikanWeb(){
-  const link=window.location.href;
-  const teks="hai bro coba website ini kita iseng-iseng ke teman lain kita spam pasti seru kan";
-  try{
-    if(navigator.share) await navigator.share({title:"Pengulang Teks",text:teks,url:link});
-    else{await navigator.clipboard.writeText(link);alert("✅ Link disalin! Kirim ke teman!");}
-  }catch(e){alert("Salin link ini: "+link)}
-}
-// ===== FITUR TRACKING PENGULANGAN =====
+// ============================================================
+// STATS (Tersimpan di localStorage)
+// ============================================================
 function loadStats() {
     let stats = localStorage.getItem('pengulangStats');
     if (!stats) {
@@ -417,20 +411,82 @@ function loadStats() {
     return JSON.parse(stats);
 }
 
-function updateStats() {
+function tambahStats() {
     let stats = loadStats();
     stats.total += 1;
     localStorage.setItem('pengulangStats', JSON.stringify(stats));
     document.getElementById('statsKamu').textContent = stats.total;
 }
 
-// Tampilkan angka tersimpan saat halaman dibuka
-document.getElementById('statsKamu').textContent = loadStats().total;
+// ============================================================
+// SALIN HASIL
+// ============================================================
+async function salinHasil(){
+    let teks = document.getElementById('hasil').value;
+    if(!teks) return alert('Belum ada teks!');
+    let ok = false;
+    try {
+        await navigator.clipboard.writeText(teks);
+        ok = true;
+    } catch {
+        let a = document.getElementById('hasil');
+        a.select();
+        ok = document.execCommand('copy');
+    }
+    
+    if(ok){
+        const popup = document.getElementById('popupOverlay');
+        popup.classList.add('tampil');
+        setTimeout(() => popup.classList.remove('tampil'), 3000);
+    } else {
+        alert('Gagal salin, coba salin manual');
+    }
+}
+
+// ============================================================
+// TAMPILKAN STATS SAAT HALAMAN DIBUKA
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('statsKamu').textContent = loadStats().total;
+});
+
+// ============================================================
+// BAGIKAN
+// ============================================================
+function sembunyikanPesan(){
+    document.getElementById('pesanAjak').style.opacity = '0';
+    setTimeout(() => document.getElementById('pesanAjak').style.display = 'none', 300);
+}
+
+async function bagikanWeb(){
+    const link = window.location.href;
+    const teks = "hai bro coba website ini kita iseng-iseng ke teman lain kita spam pasti seru kan";
+    try{
+        if(navigator.share) {
+            await navigator.share({title: "Pengulang Teks", text: teks, url: link});
+        } else {
+            await navigator.clipboard.writeText(link);
+            alert("✅ Link disalin! Kirim ke teman!");
+        }
+    } catch(e) {
+        alert("Salin link ini: " + link);
+    }
+}
 </script>
+
+<!-- TOMBOL BAGIKAN -->
+<div style="position:fixed; bottom:20px; right:20px; z-index:999;">
+    <div id="pesanAjak" style="margin-bottom:8px; background:#e3f2fd; border-radius:10px; padding:6px 10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); display:flex; align-items:center; gap:6px; width:max-content; margin-left:auto;">
+        <button onclick="sembunyikanPesan()" style="background:none; border:none; font-size:14px; cursor:pointer; color:#666; line-height:1;">✕</button>
+        <span style="font-size:13px; color:#1976d2;">Bagikan ke teman!</span>
+    </div>
+    <button onclick="bagikanWeb()" style="width:55px; height:55px; border-radius:50%; background:linear-gradient(135deg, #4CAF50, #2E7D32); color:white; border:none; font-size:22px; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center; margin-left:auto;">
+        ↗
+    </button>
+</div>
 <div class="popup-overlay" id="popupOverlay">
     <div class="popup-kotak">✅ Berhasil Disalin!</div>
 </div>
 
 </body>
 </html>
-
