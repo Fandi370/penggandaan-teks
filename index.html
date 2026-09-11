@@ -210,7 +210,7 @@
             box-shadow: 0 0 20px rgba(255,170,0,0.5), 0 0 30px rgba(255,170,0,0.3);
         }
 
-        #hasil {
+#hasil {
             height: 320px;
             resize: none;
             white-space: pre-wrap;
@@ -220,7 +220,14 @@
             border-radius: 16px;
             margin-bottom: 16px;
             border: 1px solid #99ccff;
-            transition: border-color 0.3s ease;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Tambahkan class ini untuk efek tombol saat sedang memproses */
+        .tombol-buat.sedang-proses {
+            opacity: 0.7;
+            cursor: wait;
+            pointer-events: none; /* Mencegah klik ganda saat animasi berjalan */
         }
         .info {
             font-size: 17px;
@@ -230,7 +237,15 @@
             font-weight: 500;
             transition: color 0.3s ease;
         }
-        .popup-overlay {
+        .info-tambahan {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 18px;
+            padding-left: 4px;
+            font-style: italic;
+            transition: color 0.3s ease;
+        }
+                .popup-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.4); display: flex; align-items: center;
             justify-content: center; z-index: 1000; opacity: 0; pointer-events: none;
@@ -245,24 +260,6 @@
         }
         .popup-overlay.tampil .popup-kotak { transform: scale(1); }
 
-        .stats-container {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-bottom: 18px;
-            flex-wrap: wrap;
-        }
-        .stats-item {
-            background: rgba(255,255,255,0.7);
-            padding: 6px 14px;
-            border-radius: 10px;
-            font-size: 14px;
-            color: #444;
-            border: 1px solid rgba(0,0,0,0.05);
-        }
-        .stats-item strong {
-            color: #0066cc;
-        }
     </style>
 </head>
 <body>
@@ -295,24 +292,18 @@
             <label><input type="radio" name="mode" value="baris" checked><span>📏 Tiap Baris</span></label>
             <label><input type="radio" name="mode" value="jejer"><span>🔗 Berjejer</span></label>
         </div>
-        <button class="tombol-buat" onclick="buatUlang()"><span class="ikon-pengulang">🔁</span> Buat Teks</button>
+<button class="tombol-buat" id="btnBuat" onclick="buatUlang()"><span class="ikon-pengulang">🔁</span> Buat Teks</button>
         <textarea id="hasil" readonly placeholder="Hasil teks muncul di sini..."></textarea>
-        
-        <div class="stats-container">
-            <div class="stats-item">📊 Jumlah: <strong id="total">0</strong> kali</div>
-            <div class="stats-item">📝 Karakter: <strong id="totalKarakter">0</strong></div>
-            <div class="stats-item">👑 Total Pengulangan: <strong id="statsKamu">0</strong> kali</div>
-        </div>
-
+        <div class="info">Jumlah: <span id="total">0</span> kali | Karakter: <span id="totalKarakter">0</span></div>
+        <div class="info-tambahan">️ spasi juga ikut di hitung ya 😑</div>
         <button class="tombol-salin" onclick="salinHasil()"><span>📋</span> Salin Hasil</button>
+        
+        <!-- === GANTI LINK DI BAWAH INI DENGAN LINK PROFIL SAWERIA KAMU === -->
         <button class="tombol-donasi" onclick="window.open('https://saweria.co/fandi247', '_blank')"><span>💸</span> Dukung Saya / Donasi</button>
     </div>
 </div>
 
 <script>
-// ============================================================
-// PILIH WARNA
-// ============================================================
 let warnaTerpilih = null;
 const semuaWarna = document.querySelectorAll('.warna');
 const tombolLanjut = document.getElementById('tombolLanjut');
@@ -321,6 +312,7 @@ const isiUtama = document.getElementById('isiUtama');
 const tombolBuat = document.querySelector('.tombol-buat');
 const tombolSalin = document.querySelector('.tombol-salin');
 const judul = document.querySelector('h2');
+const info = document.querySelector('.info');
 const kotakInput = document.querySelectorAll('input, textarea');
 const modeLabel = document.querySelectorAll('.pilihan-mode label');
 
@@ -347,6 +339,7 @@ tombolLanjut.addEventListener('click', () => {
     tombolBuat.style.boxShadow = `0 0 20px ${cahaya}, 0 0 30px ${cahaya}`;
     tombolSalin.style.boxShadow = `0 0 20px ${cahaya}, 0 0 30px ${cahaya}`;
     judul.style.color = warnaTeks;
+    info.style.color = warnaTeks;
     kotakInput.forEach(i => i.style.borderColor = warnaTeks);
     modeLabel.forEach(lbl => {
         lbl.style.color = warnaTeks;
@@ -374,119 +367,111 @@ tombolLanjut.addEventListener('click', () => {
     });
 });
 
-// ============================================================
-// FUNGSI PENGULANG TEKS
-// ============================================================
-function buatUlang(){
+let timerAnimasi = null;
+
+function buatUlang() {
     let kata = document.getElementById('kataDasar').value;
-    let kali = parseInt(document.getElementById('jumlahUlang').value) || 1;
+    let jumlahTotal = parseInt(document.getElementById('jumlahUlang').value) || 100;
     let mode = document.querySelector('input[name=mode]:checked').value;
     
-    if(!kata) return alert('Tulis dulu teksnya!');
+    if (!kata) return alert('Tulis dulu teksnya!');
     
-    let hasil = '';
+    if (jumlahTotal > 50000) {
+        if(!confirm("Jumlah sangat besar (" + jumlahTotal + "). Browser mungkin akan lambat. Lanjutkan?")) return;
+    }
+
+    const hasilBox = document.getElementById('hasil');
+    const totalSpan = document.getElementById('total');
+    const karakterSpan = document.getElementById('totalKarakter');
+    const btn = document.getElementById('btnBuat');
+    
+    hasilBox.value = ""; 
+    clearInterval(timerAnimasi);
+    
+    btn.classList.add('sedang-proses');
+    btn.innerHTML = '<span class="ikon-pengulang">⏳</span> Sedang Membuat...';
+
+    let sekarang = 0;
     let pemisah = mode === 'baris' ? '\n' : ' ';
-    
-    for(let i = 0; i < kali; i++) {
-        hasil += kata + pemisah;
-    }
-    
-    document.getElementById('hasil').value = hasil.trim();
-    document.getElementById('total').textContent = kali;
-    document.getElementById('totalKarakter').textContent = hasil.length;
-    
-    // ===== TAMBAH STATS =====
-    tambahStats();
-}
+    let bufferTeks = ""; 
+    let kecepatanProses = jumlahTotal > 1000 ? 50 : 10; 
 
-// ============================================================
-// STATS (Tersimpan di localStorage)
-// ============================================================
-function loadStats() {
-    let stats = localStorage.getItem('pengulangStats');
-    if (!stats) {
-        stats = { total: 0 };
-        localStorage.setItem('pengulangStats', JSON.stringify(stats));
-    }
-    return JSON.parse(stats);
-}
+    timerAnimasi = setInterval(() => {
+        let batas = Math.min(sekarang + kecepatanProses, jumlahTotal);
+        
+        for (let i = sekarang; i < batas; i++) {
+            bufferTeks += kata + pemisah;
+        }
+        
+        hasilBox.value += bufferTeks;
+        bufferTeks = "";
+        
+        sekarang = batas;
+        totalSpan.textContent = sekarang;
+        karakterSpan.textContent = hasilBox.value.length;
+        
+        hasilBox.scrollTop = hasilBox.scrollHeight;
 
-function tambahStats() {
-    let stats = loadStats();
-    stats.total += 1;
-    localStorage.setItem('pengulangStats', JSON.stringify(stats));
-    document.getElementById('statsKamu').textContent = stats.total;
+        if (sekarang >= jumlahTotal) {
+            clearInterval(timerAnimasi);
+            
+            btn.classList.remove('sedang-proses');
+            btn.innerHTML = '<span class="ikon-pengulang">🔁</span> Buat Teks';
+            
+            hasilBox.value = hasilBox.value.trim();
+            karakterSpan.textContent = hasilBox.value.length;
+        }
+    }, 10);
 }
-
-// ============================================================
-// SALIN HASIL
-// ============================================================
 async function salinHasil(){
-    let teks = document.getElementById('hasil').value;
-    if(!teks) return alert('Belum ada teks!');
-    let ok = false;
-    try {
-        await navigator.clipboard.writeText(teks);
-        ok = true;
-    } catch {
-        let a = document.getElementById('hasil');
-        a.select();
-        ok = document.execCommand('copy');
-    }
+    let teks=document.getElementById('hasil').value;
+    if(!teks)return alert('Belum ada teks!');
+    let ok=!1;
+    try{await navigator.clipboard.writeText(teks);ok=!0}
+    catch{let a=document.getElementById('hasil');a.select();ok=document.execCommand('copy')}
     
     if(ok){
-        const popup = document.getElementById('popupOverlay');
+        const popup=document.getElementById('popupOverlay');
         popup.classList.add('tampil');
-        setTimeout(() => popup.classList.remove('tampil'), 3000);
-    } else {
+        setTimeout(()=>popup.classList.remove('tampil'),3000);
+    }else{
         alert('Gagal salin, coba salin manual');
     }
 }
 
-// ============================================================
-// TAMPILKAN STATS SAAT HALAMAN DIBUKA
-// ============================================================
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('statsKamu').textContent = loadStats().total;
-});
+</script>
+<!-- TOMBOL BAGIKAN: KANAN BAWAH, PESAN DI ATAS -->
+<div style="position:fixed; bottom:20px; right:20px; z-index:999;">
+  <!-- Pesan ajakan: DI ATAS tombol, bisa ditutup -->
+  <div id="pesanAjak" style="margin-bottom:8px; background:#e3f2fd; border-radius:10px; padding:6px 10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); display:flex; align-items:center; gap:6px; width:max-content; margin-left:auto;">
+    <button onclick="sembunyikanPesan()" style="background:none; border:none; font-size:14px; cursor:pointer; color:#666; line-height:1;">✕</button>
+    <span style="font-size:13px; color:#1976d2;">Bagikan ke teman!</span>
+  </div>
 
-// ============================================================
-// BAGIKAN
-// ============================================================
+  <!-- Tombol bulat hijau kecil -->
+  <button onclick="bagikanWeb()" style="width:55px; height:55px; border-radius:50%; background:linear-gradient(135deg, #4CAF50, #2E7D32); color:white; border:none; font-size:22px; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center; margin-left:auto;">
+    ↗
+  </button>
+</div>
+
+<script>
 function sembunyikanPesan(){
-    document.getElementById('pesanAjak').style.opacity = '0';
-    setTimeout(() => document.getElementById('pesanAjak').style.display = 'none', 300);
+  document.getElementById('pesanAjak').style.opacity='0';
+  setTimeout(()=>document.getElementById('pesanAjak').style.display='none',300);
 }
-
 async function bagikanWeb(){
-    const link = window.location.href;
-    const teks = "hai bro coba website ini kita iseng-iseng ke teman lain kita spam pasti seru kan";
-    try{
-        if(navigator.share) {
-            await navigator.share({title: "Pengulang Teks", text: teks, url: link});
-        } else {
-            await navigator.clipboard.writeText(link);
-            alert("✅ Link disalin! Kirim ke teman!");
-        }
-    } catch(e) {
-        alert("Salin link ini: " + link);
-    }
+  const link=window.location.href;
+  const teks="hai bro coba website ini kita iseng-iseng ke teman lain kita spam pasti seru kan";
+  try{
+    if(navigator.share) await navigator.share({title:"Pengulang Teks",text:teks,url:link});
+    else{await navigator.clipboard.writeText(link);alert("✅ Link disalin! Kirim ke teman!");}
+  }catch(e){alert("Salin link ini: "+link)}
 }
 </script>
-
-<!-- TOMBOL BAGIKAN -->
-<div style="position:fixed; bottom:20px; right:20px; z-index:999;">
-    <div id="pesanAjak" style="margin-bottom:8px; background:#e3f2fd; border-radius:10px; padding:6px 10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); display:flex; align-items:center; gap:6px; width:max-content; margin-left:auto;">
-        <button onclick="sembunyikanPesan()" style="background:none; border:none; font-size:14px; cursor:pointer; color:#666; line-height:1;">✕</button>
-        <span style="font-size:13px; color:#1976d2;">Bagikan ke teman!</span>
-    </div>
-    <button onclick="bagikanWeb()" style="width:55px; height:55px; border-radius:50%; background:linear-gradient(135deg, #4CAF50, #2E7D32); color:white; border:none; font-size:22px; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center; margin-left:auto;">
-        ↗
-    </button>
-</div>
 <div class="popup-overlay" id="popupOverlay">
     <div class="popup-kotak">✅ Berhasil Disalin!</div>
 </div>
 
 </body>
 </html>
+
