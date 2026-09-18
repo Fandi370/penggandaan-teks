@@ -17,6 +17,26 @@
             padding: 15px;
             transition: background 0.3s ease;
         }
+        
+        /* Container Iklan Khusus di Paling Atas */
+        .wadah-iklan {
+            max-width: 560px;
+            margin: 0 auto 15px auto;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 0;
+        }
+
+        /* Jika iklan diblokir AdBlock / kosong, hilangkan ruangnya sama sekali */
+        .wadah-iklan:empty,
+        .wadah-iklan iframe[style*="display: none"] {
+            display: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
         .wadah {
             max-width: 560px;
             margin: 0 auto;
@@ -210,7 +230,7 @@
             box-shadow: 0 0 20px rgba(255,170,0,0.5), 0 0 30px rgba(255,170,0,0.3);
         }
 
-#hasil {
+        #hasil {
             height: 320px;
             resize: none;
             white-space: pre-wrap;
@@ -223,11 +243,10 @@
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        /* Tambahkan class ini untuk efek tombol saat sedang memproses */
         .tombol-buat.sedang-proses {
             opacity: 0.7;
             cursor: wait;
-            pointer-events: none; /* Mencegah klik ganda saat animasi berjalan */
+            pointer-events: none;
         }
         .info {
             font-size: 17px;
@@ -245,7 +264,7 @@
             font-style: italic;
             transition: color 0.3s ease;
         }
-                .popup-overlay {
+        .popup-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.4); display: flex; align-items: center;
             justify-content: center; z-index: 1000; opacity: 0; pointer-events: none;
@@ -265,6 +284,17 @@
 <body>
 
 <div class="wadah">
+    
+    <!-- === RUANGAN IKLAN PALING ATAS === -->
+    <div class="wadah-iklan" id="wadahIklan">
+        <!-- PASTE KODE EMBED A-ADS KAMU TEPAT DI BAWAH INI -->
+        <!-- BEGIN AADS AD UNIT 2455692 -->
+        <div id="frame" style="width: 100%; margin: auto; position: relative; z-index: 99998;">
+            <iframe data-aa='2455692' src='//acceptable.a-ads.com/2455692' style='border:0px; padding:0; width:100%; height:100%; overflow:hidden; background-color: transparent;'></iframe>
+        </div>
+        <!-- END AADS AD UNIT 2455692 -->
+    </div>
+
     <div class="layar-pilih" id="layarPilih">
         <div class="kotak-pilih">
             <h3>Pilih Dulu Warna Kesukaan Kamu 👇</h3>
@@ -292,13 +322,12 @@
             <label><input type="radio" name="mode" value="baris" checked><span>📏 Tiap Baris</span></label>
             <label><input type="radio" name="mode" value="jejer"><span>🔗 Berjejer</span></label>
         </div>
-<button class="tombol-buat" id="btnBuat" onclick="buatUlang()"><span class="ikon-pengulang">🔁</span> Buat Teks</button>
+        <button class="tombol-buat" id="btnBuat" onclick="buatUlang()"><span class="ikon-pengulang">🔁</span> Buat Teks</button>
         <textarea id="hasil" readonly placeholder="Hasil teks muncul di sini..."></textarea>
         <div class="info">Jumlah: <span id="total">0</span> kali | Karakter: <span id="totalKarakter">0</span></div>
         <div class="info-tambahan">️ spasi juga ikut di hitung ya 😑</div>
         <button class="tombol-salin" onclick="salinHasil()"><span>📋</span> Salin Hasil</button>
         
-        <!-- === GANTI LINK DI BAWAH INI DENGAN LINK PROFIL SAWERIA KAMU === -->
         <button class="tombol-donasi" onclick="window.open('https://saweria.co/fandi247', '_blank')"><span>💸</span> Dukung Saya / Donasi</button>
     </div>
 </div>
@@ -423,6 +452,7 @@ function buatUlang() {
         }
     }, 10);
 }
+
 async function salinHasil(){
     let teks=document.getElementById('hasil').value;
     if(!teks)return alert('Belum ada teks!');
@@ -439,16 +469,22 @@ async function salinHasil(){
     }
 }
 
+// Auto Refresh Iklan setiap 15 detik agar tayangan bertambah
+setInterval(function() {
+    const adIframe = document.querySelector('.wadah-iklan iframe');
+    if (adIframe) {
+        adIframe.src = adIframe.src;
+    }
+}, 15000);
 </script>
-<!-- TOMBOL BAGIKAN: KANAN BAWAH, PESAN DI ATAS -->
+
+<!-- TOMBOL BAGIKAN -->
 <div style="position:fixed; bottom:20px; right:20px; z-index:999;">
-  <!-- Pesan ajakan: DI ATAS tombol, bisa ditutup -->
   <div id="pesanAjak" style="margin-bottom:8px; background:#e3f2fd; border-radius:10px; padding:6px 10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); display:flex; align-items:center; gap:6px; width:max-content; margin-left:auto;">
     <button onclick="sembunyikanPesan()" style="background:none; border:none; font-size:14px; cursor:pointer; color:#666; line-height:1;">✕</button>
     <span style="font-size:13px; color:#1976d2;">Bagikan ke teman!</span>
   </div>
 
-  <!-- Tombol bulat hijau kecil -->
   <button onclick="bagikanWeb()" style="width:55px; height:55px; border-radius:50%; background:linear-gradient(135deg, #4CAF50, #2E7D32); color:white; border:none; font-size:22px; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center; margin-left:auto;">
     ↗
   </button>
@@ -468,10 +504,10 @@ async function bagikanWeb(){
   }catch(e){alert("Salin link ini: "+link)}
 }
 </script>
+
 <div class="popup-overlay" id="popupOverlay">
     <div class="popup-kotak">✅ Berhasil Disalin!</div>
 </div>
 
 </body>
 </html>
-
