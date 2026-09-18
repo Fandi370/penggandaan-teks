@@ -385,6 +385,16 @@ tombolLanjut.addEventListener('click', () => {
     layarPilih.style.display = 'none';
     isiUtama.style.display = 'block';
 
+    // === MUNCULKAN DAN MUAT IKLAN SECARA INSTAN ===
+    const wadahIklan = document.getElementById('wadahIklan');
+    if (wadahIklan) {
+        wadahIklan.style.display = 'flex';
+        const adIframe = wadahIklan.querySelector('iframe');
+        if (adIframe) {
+            adIframe.src = adIframe.src;
+        }
+    }
+
     document.querySelectorAll('input[name=mode]').forEach(rd => {
         rd.onchange = () => {
             modeLabel.forEach(l => {
@@ -398,6 +408,7 @@ tombolLanjut.addEventListener('click', () => {
         };
     });
 });
+
 
 let timerAnimasi = null;
 
